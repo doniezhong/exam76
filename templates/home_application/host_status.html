@@ -3,13 +3,14 @@
 <%block name="content">
 <div id="app" class="app" v-cloak>
     <div>
-        <i-select v-model="select_id">
-            <i-option v-for="ip in ip_list" :value="ip.id">{{ ip.ip }}</i-option>
+        <label>请选择主机：</label>
+        <i-select v-model="select_id" style="width: 80%">
+            <i-option v-for="ip in ip_list" :value="ip.id" >{{ ip.ip }}</i-option>
         </i-select>
     </div>
     <div id="charts">
         <div v-for="chart in chart_selectors" :id="chart"
-             style="width: 600px; height: 300px; display: inline-block"></div>
+             style="width: 80%; height: 300px; display: inline-block"></div>
     </div>
 </div>
 <style>
