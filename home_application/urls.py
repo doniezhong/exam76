@@ -10,6 +10,7 @@ urls = [
     (r'^form/$', 'form'),
     (r'^chart/$', 'chart'),
     (r'^api_test$', 'api_test'),
+    (r'^api/test/', 'test'),
     (r'^cc/search_business$', 'search_business'),
 ]
 

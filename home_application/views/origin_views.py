@@ -4,7 +4,7 @@ import json
 import os
 
 from django.conf import settings
-from django.http import StreamingHttpResponse, FileResponse
+from django.http import StreamingHttpResponse, FileResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from account.decorators import login_exempt
 from common.mymako import render_mako_context
@@ -40,7 +40,10 @@ def chart(request):
 
 def test(request):
     username = request.user.username
-    return success_result(username)
+    return HttpResponse(json.dumps({
+        'username': username,
+        'result': "OK"
+    }))
 
 
 @try_exception('查询业务')

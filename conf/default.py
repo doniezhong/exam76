@@ -32,8 +32,8 @@ from django.conf.global_settings import *  # noqa
 # BK_PAAS_HOST = 'https://paasee-dev.bk.tencent.com'
 
 APP_ID = 'donie'
-APP_TOKEN = '3be5f0ba-3993-4178-9667-50140be71ca9'
-BK_PAAS_HOST = 'https://paas.cwbk.com'
+APP_TOKEN = '3c8aa20b-6b96-49ab-bb6f-cd247ddb4bb4'
+BK_PAAS_HOST = 'http://paas.dev5.com'
 
 # 请求官方 API 默认版本号，可选值为："v2" 或 ""；其中，"v2"表示规范化API，""表示未规范化API
 DEFAULT_BK_API_VER = 'v2'

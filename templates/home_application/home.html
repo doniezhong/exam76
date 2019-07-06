@@ -2,7 +2,35 @@
 
 <%block name="content">
 <div id="app" class="app" v-cloak>
-
+    <div>
+        <label>请选择业务</label>
+        <i-select v-model="search_obj.bk_biz_id" style="width: 500px">
+            <i-option v-for="biz in bk_biz_list" :value="biz.bk_biz_id">{{ biz.bk_biz_name }}</i-option>
+        </i-select>
+    </div>
+    <div>
+        <label>请输入IP地址</label>
+        <i-input v-model="search_obj.ips" type="textarea" :autosize="{minRows: 2,maxRows: 5}"
+                 placeholder="Enter something..."></i-input>
+    </div>
+    <div>
+        <i-button type="primary" @click="get_list">查询</i-button>
+    </div>
+    <div style="margin-top: 20px">
+        <i-table border :columns="t_columns" :data="t_data">
+            <div slot-scope="{ row, index }" slot="action">
+                <i-button type="primary" size="small" style="margin-right: 5px" @click="edit(row)">View</i-button>
+                <i-button type="error" size="small" @click="remove(row)">Delete</i-button>
+            </div>
+        </i-table>
+        <Page style="margin-top: 30px"
+              :total="page.total"
+              :page-size="page.page_size"
+              :current="page.current"
+              @on-change="page_change"
+              @on-page-size-change="page_size_change"
+              show-sizer/>
+    </div>
 </div>
 <style>
     [v-cloak] {
@@ -17,8 +45,7 @@
         data() {
             return {}
         },
-        watch: {
-        },
+        watch: {},
         mounted() {
         },
         methods: {},
