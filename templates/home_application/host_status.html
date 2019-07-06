@@ -1,0 +1,64 @@
+<%inherit file="/base.html"/>
+
+<%block name="content">
+<div id="app" class="app" v-cloak>
+    <div>
+        <i-select v-model="select_ip">
+            <i-option v-for="ip in ip_list" :value="ip">{{ ip }}</i-option>
+        </i-select>
+    </div>
+    <div id="charts">
+        <div v-for="chart in chart_selectors" :id="chart"
+             style="width: 600px; height: 300px; display: inline-block"></div>
+    </div>
+</div>
+<style>
+    [v-cloak] {
+        display: none !important;
+    }
+</style>
+</%block>
+<script src="${STATIC_URL}conf/conf.js"></script>
+<script src="${STATIC_URL}conf/bk_echart.js"></script>
+<script>
+    vm = new Vue({
+        el: '#app',
+        data() {
+            return {
+                select_ip: '',
+                ip_list: [],
+                chart_selectors: []
+            }
+        },
+        watch: {},
+        mounted() {
+            this.$http.get('my_test').then(res => {
+                this.render_chart('funnel', this.chart_selectors, res.data)
+            })
+        },
+        methods: {
+            init_chart_selectors(selectors, chart_data) {
+                for (let i = 0; i < chart_data.length; i++) {
+                    selectors.push("chart" + i)
+                }
+            },
+            render_chart(type, selectors, data) {
+                this.init_chart_selectors(selectors, data);
+                setTimeout(() => {
+                    createCharts(type, selectors, data)
+                }, 300);
+            },
+            get_chart() {
+                this.$http.get('get_chart').then(res => {
+                    this.render_chart('pie', this.chart_selectors, res.data);
+                })
+            }
+        },
+    })
+</script>
+<style>
+    .app {
+        padding: 10px !important;
+        overflow: hidden;
+    }
+</style>
