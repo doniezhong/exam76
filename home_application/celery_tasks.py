@@ -13,7 +13,10 @@ from celery import task
 # @periodic_task(run_every=crontab(minute='*/5', hour='*', day_of_week="*"))
 # def performance():
 #     execute_job()
+from blueking.component.shortcuts import get_client_by_user
 from common.log import logger
+from home_application.api_manager import JobApiManager
+from home_application.models import MonitorData, MonitorItem
 
 
 @task()
@@ -55,9 +58,40 @@ def get_time():
     logger.error(u"celery 周期任务调用成功，当前时间：{}".format(now))
 
 
-@task()
-def my_test(x):
-    lstr = "donie--------------------%s-------------------donie" % x
+@periodic_task(run_every=crontab(minute='*/1', hour='*', day_of_week="*"))
+def monitor_process():
+    client = get_client_by_user('admin')
+    job_api = JobApiManager(client=client)
+    all_items = MonitorItem.objects.all()
+    script_content = '''MEMORY=$(free -m | awk 'NR==2{printf "%.2f%%", $3*100/$2 }')
+                                DISK=$(df -h | awk '$NF=="/"{printf "%s", $5}')
+                                CPU=$(top -bn1 | grep load | awk '{printf "%.2f%%", $(NF-2)}')
+                                DATE=$(date "+%Y-%m-%d %H:%M:%S")
+                                echo -e "$DATE|$MEMORY|$DISK|$CPU"'''
+    biz_item_dict = {}
+    monitor_id_dict = {}
+    for item in all_items:
+        ip_list = biz_item_dict.setdefault(item.bk_biz_id, [])
+        ip_list.append({
+            'ip': item.ip,
+            'bk_cloud_id': item.bk_cloud_id,
+        })
+        host_key = '%s|%s' % (item.ip, item.bk_cloud_id)
+        monitor_id_dict[host_key] = item.id
 
-    logger.error(lstr)
-    print lstr
+    for bk_biz_id, ip_list in biz_item_dict.items():
+        job_param = {
+            'bk_biz_id': bk_biz_id,
+            'script_content': script_content,
+            'ip_list': ip_list
+        }
+        res_log = job_api.execute_and_get_log(**job_param)
+        for host_key, log in res_log.items():
+            host = host_key.split('|')
+            datas = log.split('|')
+            MonitorData.objects.create(
+                monitor_id=monitor_id_dict.get(host_key),
+                mem=float(datas[1][:-1]),
+                disk=float(datas[2][:-1]),
+                cpu=float(datas[3][:-2])
+            )

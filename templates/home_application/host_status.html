@@ -3,8 +3,8 @@
 <%block name="content">
 <div id="app" class="app" v-cloak>
     <div>
-        <i-select v-model="select_ip">
-            <i-option v-for="ip in ip_list" :value="ip">{{ ip }}</i-option>
+        <i-select v-model="select_id">
+            <i-option v-for="ip in ip_list" :value="ip.id">{{ ip.ip }}</i-option>
         </i-select>
     </div>
     <div id="charts">
@@ -25,15 +25,23 @@
         el: '#app',
         data() {
             return {
-                select_ip: '',
+                select_id: '',
                 ip_list: [],
                 chart_selectors: []
             }
         },
-        watch: {},
+        watch: {
+            select_id: function (nval, oval) {
+                this.get_chart();
+            }
+        },
         mounted() {
-            this.$http.get('my_test').then(res => {
-                this.render_chart('funnel', this.chart_selectors, res.data)
+            this.$http.get('list_monitor_host').then(res => {
+                 if (res.result) {
+                        this.ip_list = res.data
+                    } else {
+                        this.$Message.error(res.message)
+                    }
             })
         },
         methods: {
@@ -49,8 +57,17 @@
                 }, 300);
             },
             get_chart() {
-                this.$http.get('get_chart').then(res => {
-                    this.render_chart('pie', this.chart_selectors, res.data);
+                if (this.select_id == undefined || this.select_id == null) {
+                    this.$Message.error('请选择主机');
+                    return false;
+                }
+                this.$http.post('get_chart', {id: this.select_id}).then(res => {
+                     if (res.result) {
+                        this.render_chart('line', this.chart_selectors, res.data);
+                    } else {
+                        this.$Message.error(res.message)
+                    }
+
                 })
             }
         },

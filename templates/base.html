@@ -38,15 +38,15 @@
                 <ul class="nav navbar-nav">
                     <!--菜单栏配置-->
                     <%
-                        home = demo =''
+                        home = demo = host_status = ''
                         relative_path = APP_PATH
                         if relative_path == SITE_URL or relative_path.startswith(SITE_URL + "?"):
                           home = 'king-navbar-active'
-                        elif relative_path.startswith(SITE_URL + "demo/"):
-                          demo = 'king-navbar-active'
+                        elif relative_path.startswith(SITE_URL + "host_status/"):
+                          host_status = 'king-navbar-active'
                     %>
                     <li class="${home}"><a href="${SITE_URL}"><span>首页</span></a></li>
-                    <li class="${demo}"><a href="${SITE_URL}qrcode/"><span>二维码</span></a></li>
+                    <li class="${demo}"><a href="${SITE_URL}host_status/"><span>主机状态</span></a></li>
                 </ul>
                 <ul class="nav navbar-nav navbar-right" style="margin-right: 20px">
                     <a href="###" class="avatar">

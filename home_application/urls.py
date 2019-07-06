@@ -8,6 +8,7 @@ urls = [
     (r'^demo/$', 'demo'),
     (r'^curd/$', 'curd'),
     (r'^form/$', 'form'),
+    (r'^host_status/$', 'host_status'),
     (r'^chart/$', 'chart'),
     (r'^api_test$', 'api_test'),
     (r'^api/test/', 'test'),

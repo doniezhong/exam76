@@ -10,10 +10,9 @@ from account.decorators import login_exempt
 from common.mymako import render_mako_context
 from blueking.component.shortcuts import get_client_by_request
 from home_application.api_manager import JobApiManager, CCApiManager
-from home_application.celery_tasks import my_test
-from home_application.models import MonitorItem
-from home_application.resource import Chart, TopoTreeHandle, get_search_dict
-from home_application.utils import now_time, now_time_str, time_operation
+from home_application.models import MonitorItem, MonitorData
+from home_application.resource import Chart, TopoTreeHandle, get_search_dict, LineChart
+from home_application.utils import now_time, now_time_str, time_operation, datetime_to_str
 from utilities.response import *
 from conf.default import APP_ID, APP_TOKEN
 from utilities.error import try_exception
@@ -169,3 +168,40 @@ def apost_remove_monitor(request):
         ip=param['inner_ip']
     ).delete()
     return success_result()
+
+
+def aget_list_monitor_host(request):
+    all_items = MonitorItem.objects.all()
+    return success_result([{'id': item.id, 'ip': item.ip} for item in all_items])
+
+def apost_get_chart(request):
+    param = json.loads(request.body)
+    end_date = now_time()
+    start_date = time_operation(now_time(), hours=-1)
+    data_list = MonitorData.objects.filter(monitor_id=param['id'], create_time__range=(start_date, end_date))
+    series = [
+        {
+            "name": "MEM",
+            "type": "line",
+            "data": []
+        },
+        {
+            "name": "DISK",
+            "type": "line",
+            "data": []
+        },
+        {
+            "name": "CPU",
+            "type": "line",
+            "data": []
+        },
+    ]
+    axis = []
+    for data in data_list:
+        series[0]['data'].append(data.mem)
+        series[1]['data'].append(data.disk)
+        series[2]['data'].append(data.cpu)
+        axis.append(datetime_to_str(data.create_time))
+
+    line_data = LineChart(axis=axis, series=series).chart_data
+    return success_result([line_data])

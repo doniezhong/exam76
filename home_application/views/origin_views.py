@@ -10,7 +10,6 @@ from account.decorators import login_exempt
 from common.mymako import render_mako_context
 from blueking.component.shortcuts import get_client_by_request
 from home_application.api_manager import JobApiManager, CCApiManager
-from home_application.celery_tasks import my_test
 from home_application.resource import Chart, TopoTreeHandle
 from home_application.utils import now_time, now_time_str, time_operation
 from utilities.response import *
@@ -36,6 +35,10 @@ def form(request):
 
 def chart(request):
     return render_mako_context(request, '/home_application/chart.html')
+
+
+def host_status(request):
+    return render_mako_context(request, '/home_application/host_status.html')
 
 
 def test(request):
@@ -88,21 +91,3 @@ def apost_topo_tree(request):
     handler.foreach_topo_tree(bizs_topo, hanld_node)
     return success_result(bizs_topo)
 
-
-def aget_my_test(request):
-    series = [
-        {
-            'name': '正序',
-            'value': 100,
-        },
-        {
-            'name': '倒序',
-            'value': 266,
-        }
-    ]
-
-    test_chart = Chart('pie', series=series, title='test')
-    chart_datas = []
-    for i in range(5):
-        chart_datas.append(test_chart.chart_data)
-    return success_result(chart_datas)

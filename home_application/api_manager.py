@@ -2,6 +2,7 @@
 import base64
 import time
 
+from blueking.component.client import BaseComponentClient
 from blueking.component.shortcuts import get_client_by_request
 
 
@@ -19,8 +20,12 @@ def api_exception(func):
 class ApiManager(object):
     module = ''
 
-    def __init__(self, request):
-        self.client = get_client_by_request(request)
+    def __init__(self, request=None, client=None):
+        if client:
+            self.client = client
+        else:
+            self.client = get_client_by_request(request)
+
         if self.module:
             self.module_client = getattr(self.client, self.module, None)
         else:
