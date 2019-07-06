@@ -89,9 +89,10 @@ def monitor_process():
         for host_key, log in res_log.items():
             host = host_key.split('|')
             datas = log.split('|')
-            MonitorData.objects.create(
-                monitor_id=monitor_id_dict.get(host_key),
-                mem=float(datas[1][:-1]),
-                disk=float(datas[2][:-1]),
-                cpu=float(datas[3][:-2])
-            )
+            if len(datas) == 4:
+                MonitorData.objects.create(
+                    monitor_id=monitor_id_dict.get(host_key),
+                    mem=float(datas[1][:-1]),
+                    disk=float(datas[2][:-1]),
+                    cpu=float(datas[3][:-2])
+                )

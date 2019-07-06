@@ -7,6 +7,22 @@ Vue.prototype.$apply = function (data) {
 };
 axios.defaults.baseURL = site_url;
 Vue.prototype.$http = axios;
+
+axios.interceptors.request.use(
+    config => {
+        if (config.data && config.data.noload) {
+            delete config.data.noload
+        }
+        else {
+            vm.$Spin.show();
+        }
+        return config;
+    },
+    err => {
+        return Promise.reject(err);
+    }
+);
+
 axios.interceptors.response.use(response => {
     if (response.status !== 200) {
         return {
@@ -15,6 +31,7 @@ axios.interceptors.response.use(response => {
             result: false
         }
     }
+    vm.$Spin.hide();
     return response.data
 });
 
