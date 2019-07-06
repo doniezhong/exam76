@@ -41,3 +41,19 @@ class Tmp(BaseOperateModel):
     tint = models.IntegerField()
     tdate = models.DateField()
     tbinary = models.BinaryField()
+
+    class Meta:
+        abstract = True
+
+
+class MonitorItem(BaseOperateModel):
+    ip = models.CharField(max_length=20)
+    bk_cloud_id = models.IntegerField(max_length=50)
+    bk_biz_id = models.IntegerField()
+
+
+class MonitorData(BaseOperateModel):
+    monitor_id = models.IntegerField()
+    mem = models.FloatField()
+    disk = models.FloatField()
+    cpu = models.FloatField()

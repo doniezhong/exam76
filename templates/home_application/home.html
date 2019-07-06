@@ -8,19 +8,20 @@
             <i-option v-for="biz in bk_biz_list" :value="biz.bk_biz_id">{{ biz.bk_biz_name }}</i-option>
         </i-select>
     </div>
-    <div>
+    <div style="margin-top: 10px">
         <label>请输入IP地址</label>
-        <i-input v-model="search_obj.ips" type="textarea" :autosize="{minRows: 2,maxRows: 5}"
+        <i-input v-model="search_obj.ips" type="textarea" :autosize="{minRows: 2,maxRows: 5}" style="width: 700px;"
                  placeholder="Enter something..."></i-input>
     </div>
-    <div>
+    <div style="margin-top: 10px">
         <i-button type="primary" @click="get_list">查询</i-button>
     </div>
     <div style="margin-top: 20px">
         <i-table border :columns="t_columns" :data="t_data">
             <div slot-scope="{ row, index }" slot="action">
-                <i-button type="primary" size="small" style="margin-right: 5px" @click="edit(row)">View</i-button>
-                <i-button type="error" size="small" @click="remove(row)">Delete</i-button>
+                <i-button type="primary" size="small" style="margin-right: 5px" @click="show(row, index)">查看</i-button>
+                <i-button v-if="!row.is_monitor" type="success" size="small" @click="add_monitor(row, index)">添加监控</i-button>
+                <i-button v-if="row.is_monitor" type="error" size="small" @click="remove_monitor(row, index)">移除监控</i-button>
             </div>
         </i-table>
         <Page style="margin-top: 30px"
@@ -43,12 +44,170 @@
     vm = new Vue({
         el: '#app',
         data() {
-            return {}
+            return {
+                bk_biz_list: [],
+                search_obj: {},
+                is_monitor: false,
+                t_columns: [
+                    {
+                        title: '内网ip',
+                        key: 'inner_ip',
+                    },
+                    {
+                        title: '系统名',
+                        key: 'os_name',
+                    },
+                    {
+                        title: '主机名',
+                        key: 'host_name',
+                    },
+                    {
+                        title: '云区域',
+                        key: 'bk_cloud',
+                    },
+                    {
+                        title: 'Mem(%)',
+                        key: 'mem',
+                    },
+                    {
+                        title: 'Disk(%)',
+                        key: 'disk',
+                    },
+                    {
+                        title: 'cpu(%)',
+                        key: 'cpu',
+                    },
+                    {
+                        title: '操作',
+                        slot: 'action',
+                        //width: 150,
+                        align: 'center'
+                    }
+                ],
+                t_data: [],
+                //分页
+                page: {
+                    list_data: [],
+                    td: 't_data',
+                    current: 1,
+                    page_size: 10,
+                    total: 0,
+                },
+            }
         },
-        watch: {},
+        watch: {
+            //深度监听
+            'search_obj.bk_biz_id': {
+                handler(newval, oldval) {
+                    this.get_list();
+                }
+            },
+            immediate: true
+        },
         mounted() {
+            this.get_biz_list();
         },
-        methods: {},
+        methods: {
+            get_biz_list() {
+                //获取业务id列表
+                this.$http.post('cc/search_business').then(res => {
+                    if (res.result) {
+                        this.bk_biz_list = res.data
+                    } else {
+                        this.$Message.error(res.message)
+                    }
+                })
+            },
+            page_change(page) {
+                this.page.current = page;
+                this.get_page(this.page);
+            },
+            page_size_change(page_size) {
+                this.page.page_size = page_size;
+                this.page.current = 1;
+                this.get_page(this.page);
+            },
+            get_page(page_obj) {
+                let start = (page_obj.current - 1) * page_obj.page_size;
+                let end = start + page_obj.page_size;
+                this[page_obj.td] = page_obj.list_data.slice(start, end)
+            },
+            init_page(page_obj, data) {
+                page_obj.list_data = data;
+                page_obj.total = this.page.list_data.length;
+                this.get_page(page_obj);
+            },
+            get_list() {
+                //查询
+                if (this.search_obj.bk_biz_id == undefined || this.search_obj.bk_biz_id == null) {
+                    this.$Message.error('业务id为空');
+                    return false;
+                }
+                let search_params = {};
+                Object.keys(this.search_obj).forEach(function (key) {
+                    if (vm.search_obj[key]) {
+                        search_params[key] = vm.search_obj[key];
+                    }
+                });
+                this.$http.get('list_host', {params: search_params}).then(res => {
+                    if (res.result) {
+                        this.init_page(this.page, res.data);
+                    } else {
+                        this.$Message.error(res.message)
+                    }
+                })
+            },
+            show(row, index) {
+                this.$http.post('show_usage', row).then(res => {
+                    if (res.result) {
+                        row.mem = res.data.mem;
+                        row.cpu = res.data.cpu;
+                        row.disk = res.data.disk;
+                        Vue.set(vm.t_data, index, row)
+                    } else {
+                        this.$Message.error(res.message)
+                    }
+                })
+            },
+            add_monitor(row, index) {
+                this.$Modal.confirm({
+                    title: '提示框',
+                    content: '<p>是否添加周期监控</p>',
+                    onOk: () => {
+                        this.$http.post('add_monitor', row).then(res => {
+                            if (res.result) {
+                                row.is_monitor = true;
+                                Vue.set(vm.t_data, index, row);
+                                this.$Message.success('添加成功')
+                            } else {
+                                this.$Message.error(res.message)
+                            }
+                        })
+                    },
+                    onCancel: () => {
+                    }
+                });
+            },
+            remove_monitor(row, index) {
+                this.$Modal.confirm({
+                    title: '提示框',
+                    content: '<p>是否移除周期监控</p>',
+                    onOk: () => {
+                        this.$http.post('remove_monitor', row).then(res => {
+                            if (res.result) {
+                                row.is_monitor = false;
+                                Vue.set(vm.t_data, index, row);
+                                this.$Message.success('添加成功')
+                            } else {
+                                this.$Message.error(res.message)
+                            }
+                        })
+                    },
+                    onCancel: () => {
+                    }
+                });
+            }
+        },
     })
 </script>
 <style>
